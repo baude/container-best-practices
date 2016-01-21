@@ -1,0 +1,93 @@
+// vim: set syntax=asciidoc:
+[[Image_Help_Files]]
+= Atomic Help
+
+You can now provide a man-like help file with your images that allow for users to have a deeper understanding of your
+image.  This function now allows you to provide a:
+
+* more verbose description of the what the images is and does
+* understanding of how the image should be run
+* description of the security implications inherent in running the image
+* requirement if the image needs to be installed
+
+== Displaying the help file
+
+You can display the help file for a container using the **https://github.com/projectatomic/atomic[atomic]** command.
+For example, to display the help file for a container called _foobar_, you would run the command:
+
+[source, none]
+----
+# atomic help foobar
+----
+This is the default method of displaying the help file.  In this case, the help file is formatted like any typical
+man page and is displayed (like man) with a pager.  The help file needs to be located in the / of the image filesystem
+and called *help.1*.
+
+If no help file is present and there is no HELP LABEL defined, atomic will simply tell you it could not find any
+help associated with that container or image.
+
+== Overriding the default help file behaviour
+
+You can override the default help behavior of displaying a man-like file called _/help.1_ in a pager with the use of a
+**https://github.com/projectatomic/ContainerApplicationGenericLabels[standard]** LABEL called HELP in your Dockerfile.
+The contents of the HELP label must be a fully qualified docker command that will be then be executed by atomic help.
+
+For example, some people have added a bash script called _usage_ to /usr/bin within their container that explains how to
+use their image.  An example HELP LABEL for an image in this case could be:
+
+[source, none]
+----
+LABEL HELP "docker run -it --rm IMAGE /usr/bin/usage"
+----
+
+The atomic utility will substitute _IMAGE_ for the proper image name upon execution.  The rest of the LABEL will then
+cause a temporary (--rm will remove the container after execution) with a psuedo-tty and execute /usr/bin/usage.
+
+== Sample help template ==
+
+We recommend writing the help file in the https://help.github.com/articles/markdown-basics/[markdown] language and then
+converting it to the man format.  This is handy because github can natively display markdown so the help file can be used
+in multiple ways.  You can link:/help_template.md[download the template] in markdown format here.
+
+=== Required headings
+
+The following headings are strongly encouraged in the help file for an image.
+
+==== DESCRIPTION
+Describe in greater detail the role or purpose of the image.  This can include more specifics about the packages that
+make up the image.  You can also describe whether image is meant to be interactive or more service oriented.
+
+==== USAGE
+Describe how to run the image as a container and what factors might influence the behaviour of the image itself.
+
+==== SECURITY IMPLICATIONS
+If you expose ports or run with privileges, it would be warranted to briefly note those and provide an explaination
+if needed.
+
+==== HISTORY
+Similar to a Changelog of sorts which can be as detailed as the maintainer wishes.
+
+=== Optional headings
+
+The following headings are optional and should be considered depending on the function or role of your image.
+
+==== INSTALL
+If the image needs to be installed (atomic install IMAGE), it should be noted here.  It would also be important
+to mention any configuration files that the install process exposes that a user should customize.
+
+==== UNINSTALL
+Describe how a user should remove a container based on this image.  If there are considerations beyond simply removing
+the container, then they should be described here.
+
+==== UPDATE
+When an updated image becomes available, it might be possible that users will need to take an explicit action after the
+update has been completed.  Those actions should be described here.
+
+== Converting markdown to man format
+There are several methods for converting markdown format to man format.  One prevalent method is to use go-md2man supplied
+by the golang-github-cpuguy83-go-md2man package.  To convert from markdown to man using this utility, you do as follows:
+
+[source, none]
+----
+# go-md2man -in path_to_man_file -out output_file
+----
